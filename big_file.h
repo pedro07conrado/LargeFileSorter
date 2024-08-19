@@ -1,20 +1,14 @@
-#ifndef BIG_FILE_H
-#define BIG_FILE_H
+#pragma once
 
-#include "ITEM_VENDA.h"  // Inclui o cabeçalho que define ITEM_VENDA
-#include <cstdio>
+#include <cstdint>
+#include <string>
 
-class BigFile {
-public:
-    BigFile(const char* nome_arquivo);
-    ~BigFile();
-
-    void adicionarItem(const ITEM_VENDA& item);
-    void lerItem(ITEM_VENDA& item);
-    void limpar();
-
-private:
-    FILE* arquivo;
+struct ITEM_VENDA {
+    uint32_t id;
+    uint32_t id_venda;
+    uint32_t data;
+    float desconto;
+    char obs[1008];
 };
 
-#endif // BIG_FILE_H
+void gerar_array_iv(const std::string& arquivo_saida, unsigned int n_registros, int seed);

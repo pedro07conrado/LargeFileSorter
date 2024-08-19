@@ -1,53 +1,50 @@
 #include <cstdint>
-#include <cstdio>
+#include <iostream>
+#include <fstream>
 #include <cstdlib>
 #include <ctime>
-#include "big_file.h"
-#include "prandom.h"
 
-static inline void trocar(ITEM_VENDA& x, ITEM_VENDA& y) {
-    ITEM_VENDA aux;
-    aux = x;
-    x = y;
-    y = aux;
+#include "big_file.h"
+
+
+static inline void trocar(ITEM_VENDA* x, ITEM_VENDA* y) {
+    ITEM_VENDA aux = *x;
+    *x = *y;
+    *y = aux;
 }
 
 static void embaralhar(ITEM_VENDA* v, int ini, int fim) {
-    int i, j;
-    for (i = fim - 1; i > ini; i--) {
-        j = (rand_() % (i + 1));
+    for (int i = fim - 1; i > ini; i--) {
+        int j = rand() % (i + 1);
         j = j <= ini ? ini + 1 : j;
-        trocar(v[i], v[j]);
+        trocar(&v[i], &v[j]);
     }
 }
 
-void gerar_array_iv(const char* arquivo_saida, unsigned int n_registros, int seed) {
-    ITEM_VENDA* iv;
-    FILE* saida;
-    uint32_t i;
-    time_t t = time(NULL);
+void gerar_array_iv(const std::string& arquivo_saida, unsigned int n_registros, int seed) {
+    ITEM_VENDA* iv = new ITEM_VENDA[n_registros];
+    std::ofstream saida(arquivo_saida, std::ios::binary);
+    time_t t = time(nullptr);
 
     srand(seed);
 
-    iv = (ITEM_VENDA*)malloc(sizeof(ITEM_VENDA) * n_registros);
-
-    for (i = 0; i < n_registros; i++) {
+    for (uint32_t i = 0; i < n_registros; i++) {
         iv[i].id = i;
         iv[i].id_venda = i + (rand() % 2);
-        iv[i].desconto = (rand() % 10) / (float)100;
+        iv[i].desconto = (rand() % 10) / 100.0f;
         iv[i].data = t + ((-1 * (rand() % 30)) * 86400);
-        iv[i].desc[0] = '\0';
+        iv[i].obs[0] = '\0';
     }
 
     embaralhar(iv, 0, n_registros);
 
-    saida = fopen(arquivo_saida, "wb");
-    if (saida == NULL) {
-        perror("Erro");
+    if (!saida) {
+        std::cerr << "Erro ao abrir o arquivo de saída." << std::endl;
         exit(1);
     }
 
-    fwrite(iv, sizeof(ITEM_VENDA), n_registros, saida);
-    fclose(saida);
-    free(iv);
+    saida.write(reinterpret_cast<char*>(iv), sizeof(ITEM_VENDA) * n_registros);
+    saida.close();
+
+    delete[] iv;
 }
