@@ -1,19 +1,7 @@
-#pragma once
+#ifndef ORDENACAO_EXTERNA_H
+#define ORDENACAO_EXTERNA_H
 
-#include <cstdio>    // Para funções como printf, etc.
-#include <cstdlib>   // Para funções como malloc, free, etc.
-#include <cstring>   // Para funções como strcpy, strcmp, etc.
-#include <cstdbool>  // Para o tipo bool
+void ordenacao_externa(const char* entrada, size_t bytes_registros, size_t bytes_buffer_saida, const char* nome_saida);
+int isSaidaOrdenada(const char* nome_arquivo);
 
-#include "big_file.h"
-#include "Buffer.h"
-
-/**************************************
-* PROTÓTIPOS
-**************************************/
-
-void Trocar(ITEM_VENDA* item_venda, int maior, int i);
-int Partition(ITEM_VENDA* item_venda, int inicio, int fim);
-void QuickSort(ITEM_VENDA* item_venda, int inicio, int fim);
-
-void Merge_K_Vias(Buffer** vetor_buffers, Buffer* buffer_saida, int quant_reg_buffer_saida, const char* nome_arq_saida, int quant_reg_total);
+#endif

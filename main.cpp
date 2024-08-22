@@ -1,80 +1,73 @@
-#include <cmath>
+#include <iostream>
+#include <cstdlib>
 #include <ctime>
-#include <vector>
-#include <memory>
+#include "big_file.h"
+#include "ordenacao.h"
 
-#include "big_file.h"   // Presumindo que esta biblioteca possui funções para lidar com arquivos grandes
-#include "Buffer.h"     // Presumindo que esta biblioteca contém a classe Buffer e suas funções associadas
-#include "arquivo.h"    // Presumindo que esta biblioteca contém funções para manipulação de arquivos
-#include "ordenacao.h"  // Presumindo que esta biblioteca contém as funções de ordenação necessárias
+#ifdef _WIN32
+#define _CRTDBG_MAP_ALLOC
+#include <crtdbg.h>
+#endif
 
-int main() {
-    //------------------- DEFINIÇÃO DOS CONTROLES -------------------
+using namespace std;
 
-    int QUANT_REGISTROS_TOTAL = 256000;                         // N - Quantidade de registros
-    int TAM_MAXIMO_BUFFER_ENTRADA = 8388608;                    // B - Tamanho máximo do buffer de entrada
-    int TAM_MAX_BUFFER_SAIDA = TAM_MAXIMO_BUFFER_ENTRADA / 8;   // S - Tamanho máximo do buffer de saída
+int main(int argc, char** argv) {
+    unsigned long int qtdRegistros;
+    unsigned long int maximoMemoria;
+    unsigned long int tamBufferSaida;
+    int div;
+    clock_t tempo;
 
-    //------------------- DEFINIÇÃO DOS SUBCONTROLES -------------------
-    int TAM_ARQUIVO_ENTRADA = 1024 * QUANT_REGISTROS_TOTAL;
-    int QUANT_ARQUIVOS_TEMPORARIOS = std::ceil(static_cast<double>(TAM_ARQUIVO_ENTRADA) / TAM_MAXIMO_BUFFER_ENTRADA) + 1;
-    int QUANT_REGISTROS_BUFFER_SAIDA = TAM_MAX_BUFFER_SAIDA / 1024;
-    int QUANT_REGISTROS_BUFFER_ENTRADA = std::ceil(static_cast<double>((TAM_MAXIMO_BUFFER_ENTRADA - TAM_MAX_BUFFER_SAIDA) / QUANT_ARQUIVOS_TEMPORARIOS) / 1024);
-
-    //------------------- DECLARAÇÃO DE VARIÁVEIS --------------------------------------
-    clock_t t_inicio, t_fim;
-    double tempo_execucao;
-
-    //--------------- DENIFIR NOME DOS ARQUIVOS ----------------------------------------
-    std::string nome_arquivo_entrada = "entrada.dat";
-    std::string nome_arquivo_saida = "saida.dat";
-
-    //--------------- GERAR ARQUIVO DE ENTRADA -----------------------------------------
-    gerar_array_iv(nome_arquivo_entrada.c_str(), QUANT_REGISTROS_TOTAL, 42);
-    std::cout << "Arquivo de entrada gerado com sucesso!" << std::endl;
-
-    //--------------- INICIAR CRONOMETRO -----------------------------------------------
-    t_inicio = clock();
-
-    //--------------- DIVIDIR ARQUIVO DE ENTRADA EM ARQUIVOS TEMPORARIOS ---------------
-    Arquivo_Dividir(nome_arquivo_entrada.c_str(), QUANT_ARQUIVOS_TEMPORARIOS, QUANT_REGISTROS_TOTAL);
-    std::cout << "Arquivos temporarios gerados com sucesso!" << std::endl;
-
-    //--------------- CRIAR BUFFERS DE ENTRADA -----------------------------------------
-    auto vetor_buffers_entrada = BE_CriarVetor(QUANT_ARQUIVOS_TEMPORARIOS, QUANT_REGISTROS_BUFFER_ENTRADA);
-    std::cout << "Buffers de entrada criados com sucesso!" << std::endl;
-
-    //--------------- CRIAR ARQUIVO DE SAÍDA -------------------------------------------
-    {
-        std::ofstream arquivo_saida(nome_arquivo_saida, std::ios::binary);
+    // Verifica se os parâmetros foram passados pela linha de comando
+    if (argc != 4) {
+        qtdRegistros = 512000;
+        maximoMemoria = 67108864;
+        tamBufferSaida = maximoMemoria / 2;
+    } else {
+        qtdRegistros = static_cast<unsigned long int>(atoi(argv[1]));
+        maximoMemoria = static_cast<unsigned long int>(atoi(argv[2]));
+        div = atoi(argv[3]);
+        tamBufferSaida = maximoMemoria / div;
     }
-    std::cout << "Arquivo de saida criado com sucesso!" << std::endl;
 
-    //--------------- CRIAR BUFFERS DE SAIDA --------------------------------------------
-    auto buffer_saida = std::make_unique<Buffer>(BS_Criar(nome_arquivo_saida.c_str(), QUANT_REGISTROS_BUFFER_SAIDA));
-    std::cout << "Buffer de saida criado com sucesso!" << std::endl;
+    // Interface diferenciada de saída no terminal
+    cout << "##############################################\n";
+    cout << "#         INICIANDO PROCESSO...              #\n";
+    cout << "##############################################\n\n";
 
-   //--------------- INTERCALAÇÃO DE K VIAS --------------------------------------------
-    Merge_K_Vias(vetor_buffers_entrada.data(), &buffer_saida, QUANT_REGISTROS_BUFFER_SAIDA, nome_arquivo_saida.c_str(), QUANT_REGISTROS_TOTAL);
-    std::cout << "Intercalacao de k vias concluida com sucesso!" << std::endl;
+    cout << "[1] Fase 1: Gerando arquivo de dados 'teste.dat'...\n";
+    gerar_array_iv("teste.dat", qtdRegistros, 42);
 
-    //--------------- REMOVER ARQUIVOS TEMPORARIOS --------------------------------------
-    ArquivosTemporarios_Remover(QUANT_ARQUIVOS_TEMPORARIOS);
-    std::cout << "Arquivos temporarios removidos com sucesso!" << std::endl;
+    cout << "[2] Fase 2: Executando ordenação externa...\n";
+    cout << "   - Configurações:\n";
+    cout << "      > Quantidade de registros: " << qtdRegistros << endl;
+    cout << "      > Memória máxima: " << maximoMemoria << " bytes\n";
+    cout << "      > Tamanho do buffer de saída: " << tamBufferSaida << " bytes\n";
+    
+    tempo = clock();
+    ordenacao_externa("teste.dat", maximoMemoria, tamBufferSaida, "saida");
+    tempo = clock() - tempo;
 
-    //--------------- DESTRUIR VETOR DE BUFFERS ----------------------------------------------
-    BE_Destruir(vetor_buffers_entrada);
-    std::cout << "Vetor de buffers de entrada destruido com sucesso!" << std::endl;
+    cout << "\n[3] Fase 3: Ordenação finalizada! Verificando integridade...\n";
 
-    //--------------- DESTRUIR BUFFER DE SAIDA -------------------------------------------------
-    BS_Destruir(buffer_saida.get());
-    std::cout << "Buffer de saida destruido com sucesso!" << std::endl;
+    int resposta = isSaidaOrdenada("saida");
+    cout << "\n##############################################\n";
+    if (resposta) {
+        cout << "# Resultado: O arquivo 'saida' está ordenado #\n";
+    } else {
+        cout << "# Resultado: O arquivo 'saida' NÃO está ordenado #\n";
+    }
+    cout << "##############################################\n";
 
-    //--------------- FINALIZAR CRONOMETRO ----------------------------------------------
-    t_fim = clock();
-    tempo_execucao = static_cast<double>(t_fim - t_inicio) / CLOCKS_PER_SEC;
-    std::cout << "Tempo de execucao: " << tempo_execucao << " segundos" << std::endl;
+    // Tempo total da execução
+    cout << "\nTempo total de processamento: " << static_cast<float>(tempo) / CLOCKS_PER_SEC << " segundos\n";
 
-    std::cout << "FIM" << std::endl;
+    cout << "\n########## FINALIZAÇÃO ##########\n";
+
+    #ifdef _WIN32
+    // Checagem de vazamento de memória no Windows
+    _CrtDumpMemoryLeaks();
+    #endif
+
     return 0;
 }

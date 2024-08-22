@@ -1,14 +1,13 @@
 #pragma once
 
 #include <cstdint>
-#include <string>
 
-struct ITEM_VENDA {
+struct ITEM_VENDA{
     uint32_t id;
     uint32_t id_venda;
     uint32_t data;
     float desconto;
-    char obs[1008];
+    char desc[1008];
 };
 
-void gerar_array_iv(const std::string& arquivo_saida, unsigned int n_registros, int seed);
+void gerar_array_iv(const char* arquivo_saida, unsigned int n_registros, int seed);
