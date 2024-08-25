@@ -64,6 +64,8 @@ int main(int argc, char** argv) {
 
     cout << "\n########## FINALIZAÇÃO ##########\n";
 
+//Caso a sua máquina seja Windows descomente a linha 68 e comente a linha 69
+//  #ifndef _WIN32
     #ifdef _WIN32
     // Checagem de vazamento de memória no Windows
     _CrtDumpMemoryLeaks();

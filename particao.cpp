@@ -128,7 +128,7 @@ void teste_ordenacao_particao (char *arquivo) {
 
   // Exibe os IDs dos itens lidos.
   for (i = 0; i < tamanho; i++) {
-    printf("ID: %" PRIu32 "\n", itens[i].id);
+    cout << "ID: " << itens[i].id << endl;
   }
 
   // Fecha o arquivo e libera a memória alocada.
