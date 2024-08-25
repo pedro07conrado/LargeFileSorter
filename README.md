@@ -27,9 +27,10 @@ $ mingw32-make
 ```
 
 ### Possiveís problemas: 
-Caso o seu compilador reclame ao executar o comando `Make` e o problema seja igual a esse: 
+#### Caso o seu compilador reclame ao executar o comando `Make` e o problema seja igual a esse: 
 ![WhatsApp Image 2024-08-25 at 11 11 57](https://github.com/user-attachments/assets/1a83e128-eeb4-464b-ba8a-05d0977cec01)
 
-vá as configurações do ambiente C/C++ e faça oque se mostra na imagem a seguir:
+
+#### vá as configurações do ambiente C/C++ e faça oque se mostra na imagem a seguir:
 ![WhatsApp Image 2024-08-25 at 11 15 52](https://github.com/user-attachments/assets/be4466cb-60f2-4664-8357-cd91db51a6fc)
 
